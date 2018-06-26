@@ -2,6 +2,8 @@ package org.ergoplatform.modifiers.history
 
 import akka.util.ByteString
 import com.google.common.primitives.Shorts
+import io.circe.Encoder
+import io.circe.syntax._
 import org.ergoplatform.modifiers.ModifierWithDigest
 import org.ergoplatform.settings.Algos
 import scorex.core.serialization.Serializer
@@ -46,6 +48,15 @@ case class Extension(headerId: ModifierId,
 }
 
 object Extension {
+
+  implicit val jsonEncoder: Encoder[Extension] = (e: Extension) => {
+    Map(
+      "headerId" -> Algos.encode(e.headerId).asJson,
+      "mandatoryFields" -> e.mandatoryFields.map(kv => Algos.encode(kv._1) -> Algos.encode(kv._2).asJson).asJson,
+      "optionalFields" -> e.optionalFields.map(kv => Algos.encode(kv._1) -> Algos.encode(kv._2).asJson).asJson
+    ).asJson
+  }
+
   val modifierTypeId: ModifierTypeId = ModifierTypeId @@ (108: Byte)
 
   def rootHash(e: Extension): Digest32 = {

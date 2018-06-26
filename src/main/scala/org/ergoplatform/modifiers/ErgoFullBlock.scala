@@ -2,7 +2,7 @@ package org.ergoplatform.modifiers
 
 import io.circe.Encoder
 import io.circe.syntax._
-import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Header}
+import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Extension, Header}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import scorex.core.serialization.Serializer
 import scorex.core.{ModifierId, ModifierTypeId, TransactionsCarryingPersistentNodeViewModifier}
