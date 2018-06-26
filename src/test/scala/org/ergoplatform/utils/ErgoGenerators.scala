@@ -1,10 +1,11 @@
 package org.ergoplatform.utils
 
+import akka.util.ByteString
 import org.ergoplatform.ErgoBox.{BoxId, R3}
 import org.ergoplatform.mining.EquihashSolution
 import org.ergoplatform.mining.difficulty.RequiredDifficulty
 import org.ergoplatform.modifiers.ErgoFullBlock
-import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Header}
+import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Extension, Header}
 import org.ergoplatform.modifiers.mempool.{ErgoTransaction, TransactionIdsForHeader}
 import org.ergoplatform.modifiers.state.{Insertion, StateChanges, UTXOSnapshotChunk}
 import org.ergoplatform.nodeView.history.ErgoSyncInfo
@@ -91,6 +92,20 @@ trait ErgoGenerators extends CoreGenerators with Matchers {
     val x = SerializedAdProof @@ genBoundedBytes(32, 32 * 1024)
     x
   }
+
+  def kvGen(keySize: Int, valuesSize: Int): Gen[(Array[Byte], Array[Byte])] = for {
+    key <- genBytes(keySize)
+    value <- genBytes(valuesSize)
+  } yield (key, value)
+
+  lazy val extensionGen: Gen[Extension] = for {
+    headerId <- modifierIdGen
+    mandatoryElements <- Gen.nonEmptyListOf(kvGen(4, 6).map(kv => (ByteString(kv._1), ByteString(kv._2))))
+    optionalElementsElements <- Gen.nonEmptyListOf(kvGen(32, 6).map(kv => (ByteString(kv._1), ByteString(kv._2))))
+  } yield Extension(headerId,
+    mandatoryElements.toMap.filter(_._1 != ByteString(Array.fill(4)(0: Byte))),
+    optionalElementsElements.toMap)
+
 
   lazy val invalidHeaderGen: Gen[Header] = for {
     version <- Arbitrary.arbitrary[Byte]

@@ -23,6 +23,14 @@ class SerializationTests extends ErgoPropertyTest with scorex.testkit.Serializat
     }
   }
 
+  property("Extension serialization") {
+    val serializer = ExtensionSerializer
+    forAll(extensionGen) { b: Extension =>
+      val recovered = serializer.parseBytes(b.bytes)
+      recovered.get shouldBe b
+    }
+  }
+
   property("ErgoBox serialization") {
     checkSerializationRoundtrip(ergoBoxGenNoProp, ErgoBoxSerializer)
   }

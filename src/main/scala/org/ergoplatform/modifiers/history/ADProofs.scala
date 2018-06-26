@@ -3,8 +3,8 @@ package org.ergoplatform.modifiers.history
 import com.google.common.primitives.Bytes
 import io.circe.Encoder
 import io.circe.syntax._
+import org.ergoplatform.modifiers.ModifierWithDigest
 import org.ergoplatform.modifiers.state.{Insertion, Removal, StateChangeOperation, StateChanges}
-import org.ergoplatform.modifiers.{ErgoPersistentModifier, ModifierWithDigest}
 import org.ergoplatform.settings.Algos.HF
 import org.ergoplatform.settings.{Algos, Constants}
 import scorex.core.serialization.Serializer
@@ -15,8 +15,7 @@ import scorex.crypto.hash.Digest32
 
 import scala.util.{Failure, Success, Try}
 
-case class ADProofs(headerId: ModifierId, proofBytes: SerializedAdProof) extends ErgoPersistentModifier
-  with ModifierWithDigest {
+case class ADProofs(headerId: ModifierId, proofBytes: SerializedAdProof) extends ModifierWithDigest {
 
   override def digest: Digest32 = ADProofs.proofDigest(proofBytes)
 

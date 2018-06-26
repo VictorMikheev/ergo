@@ -4,7 +4,7 @@ import org.ergoplatform.settings.Algos
 import scorex.core.{ModifierId, ModifierTypeId, PersistentNodeViewModifier}
 
 
-trait ModifierWithDigest extends PersistentNodeViewModifier {
+trait ModifierWithDigest extends ErgoPersistentModifier {
 
   override lazy val id: ModifierId = ModifierWithDigest.computeId(modifierTypeId, headerId, digest)
 
