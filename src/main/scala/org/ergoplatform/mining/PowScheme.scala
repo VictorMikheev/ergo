@@ -28,15 +28,15 @@ trait PowScheme {
                  adProofBytes: SerializedAdProof,
                  transactions: Seq[ErgoTransaction],
                  timestamp: Timestamp,
-                 extensionHash: Digest32): Option[ErgoFullBlock] = {
+                 extension: Extension): Option[ErgoFullBlock] = {
 
     val transactionsRoot = BlockTransactions.rootHash(transactions.map(_.id))
     val adProofsRoot = ADProofs.proofDigest(adProofBytes)
 
     prove(parentOpt, nBits, stateRoot, adProofsRoot, transactionsRoot,
-      timestamp, extensionHash).map { h =>
+      timestamp, extension.digest).map { h =>
       val adProofs = ADProofs(h.id, adProofBytes)
-      new ErgoFullBlock(h, BlockTransactions(h.id, transactions), Some(adProofs))
+      new ErgoFullBlock(h, BlockTransactions(h.id, transactions), extension, Some(adProofs))
     }
   }
 
@@ -48,14 +48,15 @@ trait PowScheme {
     val adProofBytes: SerializedAdProof = candidateBlock.adProofBytes
     val transactions: Seq[ErgoTransaction] = candidateBlock.transactions
     val timestamp: Timestamp = candidateBlock.timestamp
-    val extensionHash: Digest32 = candidateBlock.extensionHash
+    val extensionHash: Digest32 = candidateBlock.extension.digest
 
     val transactionsRoot = BlockTransactions.rootHash(transactions.map(_.id))
     val adProofsRoot = ADProofs.proofDigest(adProofBytes)
 
     prove(parentOpt, nBits, stateRoot, adProofsRoot, transactionsRoot, timestamp, extensionHash).map { h =>
       val adProofs = ADProofs(h.id, adProofBytes)
-      new ErgoFullBlock(h, BlockTransactions(h.id, transactions), Some(adProofs))
+      val extension = candidateBlock.extension.copy(headerId = h.id)
+      new ErgoFullBlock(h, BlockTransactions(h.id, transactions), extension, Some(adProofs))
     }
   }
 

@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.TestProbe
 import io.iohk.iodb.ByteArrayWrapper
 import org.ergoplatform.mining.DefaultFakePowScheme
-import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Header}
+import org.ergoplatform.modifiers.history.{ADProofs, BlockTransactions, Extension, Header}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.modifiers.{ErgoFullBlock, ErgoPersistentModifier}
 import org.ergoplatform.nodeView.history.ErgoHistory
@@ -322,7 +322,7 @@ class ErgoNodeViewHolderSpecification extends ErgoPropertyTest with BeforeAndAft
     val brokenHeader = brokenBlockIn.header.copy(transactionsRoot = brokenTransactionsIn.digest)
     val brokenTransactions = brokenTransactionsIn.copy(headerId = brokenHeader.id)
     val brokenProofs = brokenBlockIn.aDProofs.get.copy(headerId = brokenHeader.id)
-    ErgoFullBlock(brokenHeader, brokenTransactions, Some(brokenProofs))
+    ErgoFullBlock(brokenHeader, brokenTransactions, Extension.empty, Some(brokenProofs))
   }
 
   private val t8 = TestCase("switching for a better chain") { fixture =>

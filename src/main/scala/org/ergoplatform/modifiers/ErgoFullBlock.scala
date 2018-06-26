@@ -10,6 +10,7 @@ import scorex.core.{ModifierId, ModifierTypeId, TransactionsCarryingPersistentNo
 //TODO we need it to be ErgoPersistentModifier just to put it to ProgressInfo
 case class ErgoFullBlock(header: Header,
                          blockTransactions: BlockTransactions,
+                         extension: Extension,
                          aDProofs: Option[ADProofs])
   extends ErgoPersistentModifier
     with TransactionsCarryingPersistentNodeViewModifier[ErgoTransaction] {
@@ -36,6 +37,7 @@ object ErgoFullBlock {
     Map(
       "header" -> b.header.asJson,
       "blockTransactions" -> b.blockTransactions.asJson,
+      "extension" -> b.extension.asJson,
       "adProofs" -> b.aDProofs.map(_.asJson).getOrElse(Map.empty[String, String].asJson)
     ).asJson
 }

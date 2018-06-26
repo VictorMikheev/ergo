@@ -29,7 +29,7 @@ case class Header(version: Version,
                   timestamp: Timestamp,
                   nBits: Long, //actually it is unsigned int
                   height: Int,
-                  extensionHash: Digest32,
+                  extensionRoot: Digest32,
                   equihashSolution: EquihashSolution
                  ) extends ErgoPersistentModifier {
 
@@ -62,6 +62,8 @@ case class Header(version: Version,
 
   lazy val transactionsId: ModifierId =
     ModifierWithDigest.computeId(BlockTransactions.modifierTypeId, id, transactionsRoot)
+
+  lazy val extensionId: ModifierId = ModifierWithDigest.computeId(Extension.modifierTypeId, id, extensionRoot)
 
   override lazy val toString: String = s"Header(${this.asJson.noSpaces})"
 
@@ -98,7 +100,7 @@ object Header {
       "stateRoot" -> Algos.encode(h.stateRoot).asJson,
       "parentId" -> Algos.encode(h.parentId).asJson,
       "timestamp" -> h.timestamp.asJson,
-      "extensionHash" -> Algos.encode(h.extensionHash).asJson,
+      "extensionHash" -> Algos.encode(h.extensionRoot).asJson,
       "equihashSolutions" -> Algos.encode(h.equihashSolution.bytes).asJson,
       "nBits" -> h.nBits.asJson,
       "height" -> h.height.asJson,
@@ -117,7 +119,7 @@ object HeaderSerializer extends Serializer[Header] {
       h.transactionsRoot,
       h.stateRoot,
       Longs.toByteArray(h.timestamp),
-      h.extensionHash,
+      h.extensionRoot,
       RequiredDifficulty.toBytes(h.nBits),
       Ints.toByteArray(h.height))
 

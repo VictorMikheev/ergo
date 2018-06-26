@@ -140,8 +140,9 @@ trait ErgoGenerators extends CoreGenerators with Matchers {
   lazy val invalidErgoFullBlockGen: Gen[ErgoFullBlock] = for {
     header <- invalidHeaderGen
     txs <- invalidBlockTransactionsGen
+    extension <- extensionGen
     proof <- randomADProofsGen
-  } yield ErgoFullBlock(header, txs, Some(proof))
+  } yield ErgoFullBlock(header, txs, extension, Some(proof))
 
   lazy val emptyMemPoolGen: Gen[ErgoMemPool] =
     Gen.resultOf({ _: Unit => ErgoMemPool.empty })(Arbitrary(Gen.const(())))

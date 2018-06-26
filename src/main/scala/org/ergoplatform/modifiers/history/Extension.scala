@@ -49,9 +49,17 @@ case class Extension(headerId: ModifierId,
 
 object Extension {
 
+  private val EmptyId: ModifierId = ModifierId @@ Array.fill(32)(0.toByte)
+
+  val empty: Extension = Extension(EmptyId, Map(), Map())
+
+  // TODO rethink and implement when ready
+  def fromHeader(headerOpt: Option[Header]): Extension = empty
+
   implicit val jsonEncoder: Encoder[Extension] = (e: Extension) => {
     Map(
       "headerId" -> Algos.encode(e.headerId).asJson,
+      "digest" -> Algos.encode(e.digest).asJson,
       "mandatoryFields" -> e.mandatoryFields.map(kv => Algos.encode(kv._1) -> Algos.encode(kv._2).asJson).asJson,
       "optionalFields" -> e.optionalFields.map(kv => Algos.encode(kv._1) -> Algos.encode(kv._2).asJson).asJson
     ).asJson

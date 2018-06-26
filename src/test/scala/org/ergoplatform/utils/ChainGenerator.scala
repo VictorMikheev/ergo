@@ -96,7 +96,7 @@ trait ChainGenerator {
   }
 
   def nextBlock(prev: Option[ErgoFullBlock], txs: Seq[ErgoTransaction],
-                extensionHash: Digest32 = EmptyDigest32,
+                extension: Extension = Extension.empty,
                 nBits: Long = Constants.InitialNBits): ErgoFullBlock =
     powScheme.proveBlock(
       prev.map(_.header),
@@ -105,7 +105,7 @@ trait ChainGenerator {
       emptyProofs,
       txs,
       Math.max(timeProvider.time(), prev.map(_.header.timestamp + 1).getOrElse(timeProvider.time())),
-      extensionHash
+      extension
     ).get
 
   def applyHeaderChain(historyIn: ErgoHistory, chain: HeaderChain): ErgoHistory = {
