@@ -2,18 +2,22 @@ package org.ergoplatform.network
 
 
 import akka.actor.{ActorRef, ActorSystem}
+import org.ergoplatform.nodeView.ModifiersStatusKeeper
+import org.ergoplatform.nodeView.ModifiersStatusKeeper.{Received, Requested}
 import scorex.core.network.{ConnectedPeer, DeliveryTracker}
 import scorex.core.utils.NetworkTimeProvider
 import scorex.core.{ModifierId, ModifierTypeId}
 
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class ErgoDeliveryTracker(system: ActorSystem,
                           deliveryTimeout: FiniteDuration,
                           maxDeliveryChecks: Int,
                           nvsRef: ActorRef,
-                          timeProvider: NetworkTimeProvider)
+                          timeProvider: NetworkTimeProvider,
+                          statusKeeper: ModifiersStatusKeeper)
   extends DeliveryTracker(system, deliveryTimeout, maxDeliveryChecks, nvsRef) {
 
   private val ToDownloadRetryInterval = 10.seconds
@@ -37,6 +41,13 @@ class ErgoDeliveryTracker(system: ActorSystem,
       .map(_.copy(lastTry = downloadRequestTime))
       .getOrElse(ToDownloadStatus(modifierTypeId, downloadRequestTime, downloadRequestTime))
     expectingFromRandom.put(key(modifierId), newValue)
+    statusKeeper.set(modifierId, Requested)
+  }
+
+  override def expect(cp: ConnectedPeer, mtid: ModifierTypeId, mids: Seq[ModifierId])
+                     (implicit ec: ExecutionContext): Unit = {
+    mids.foreach(modifierId => statusKeeper.set(modifierId, Requested))
+    super.expect(cp, mtid, mids)(ec)
   }
 
   /**
@@ -69,6 +80,7 @@ class ErgoDeliveryTracker(system: ActorSystem,
     } else {
       super.onReceive(mtid, mid, cp)
     }
+    statusKeeper.set(mid, Received)
   }
 
   def isKnown(mid: ModifierIdAsKey): Boolean = expecting.contains(mid) ||

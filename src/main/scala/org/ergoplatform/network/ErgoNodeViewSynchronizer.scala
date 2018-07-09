@@ -5,9 +5,10 @@ import org.ergoplatform.modifiers.ErgoPersistentModifier
 import org.ergoplatform.modifiers.history.{BlockTransactions, Header}
 import org.ergoplatform.modifiers.mempool.ErgoTransaction
 import org.ergoplatform.network.ErgoNodeViewSynchronizer.CheckModifiersToDownload
+import org.ergoplatform.nodeView.ModifiersStatusKeeper.{Requested, Unknown}
 import org.ergoplatform.nodeView.history.{ErgoHistory, ErgoSyncInfo, ErgoSyncInfoMessageSpec}
 import org.ergoplatform.nodeView.mempool.ErgoMemPool
-import org.ergoplatform.nodeView.{ErgoModifiersCache, ModifiersStatusChecker}
+import org.ergoplatform.nodeView.{ErgoModifiersCache, ModifiersStatusKeeper}
 import scorex.core.NodeViewHolder._
 import scorex.core.network.NetworkController.ReceivableMessages.SendToNetwork
 import scorex.core.network.NetworkControllerSharedMessages.ReceivableMessages.DataFromPeer
@@ -31,10 +32,11 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
     ErgoSyncInfo, ErgoSyncInfoMessageSpec.type, ErgoPersistentModifier, ErgoHistory,
     ErgoMemPool](networkControllerRef, viewHolderRef, syncInfoSpec, networkSettings, timeProvider) {
 
+  private val statusKeeper = new ModifiersStatusKeeper()
   override protected val deliveryTracker = new ErgoDeliveryTracker(context.system, deliveryTimeout, maxDeliveryChecks,
-    self, timeProvider)
+    self, timeProvider, statusKeeper)
 
-  protected val statusCheckerOpt: Option[ModifiersStatusChecker] = None
+  protected val statusCheckerOpt: Option[ModifiersStatusKeeper] = None
 
   private val downloadListSize = networkSettings.maxInvObjects
 
@@ -84,9 +86,8 @@ class ErgoNodeViewSynchronizer(networkControllerRef: ActorRef,
     case CheckModifiersToDownload =>
       deliveryTracker.removeOutdatedExpectingFromRandom()
       historyReaderOpt.foreach { h =>
-        val sc = new ModifiersStatusChecker(h, modifiersCache, deliveryTracker)
-
-        val newIds = h.nextModifiersToDownload(downloadListSize - deliveryTracker.expectingSize, sc.isUnknown)
+        def isUnknown(id: ModifierId): Boolean = statusKeeper.status(id)(h, modifiersCache) == Unknown
+        val newIds = h.nextModifiersToDownload(downloadListSize - deliveryTracker.expectingSize, isUnknown)
         val oldIds = deliveryTracker.idsExpectingFromRandomToRetry()
         (newIds ++ oldIds).groupBy(_._1).foreach(ids => requestDownload(ids._1, ids._2.map(_._2)))
       }
